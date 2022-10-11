@@ -1,5 +1,5 @@
-from unittest.mock import NonCallableMock
-from matplotlib.style import available
+#from unittest.mock import NonCallableMock
+#from matplotlib.style import available
 import streamlit as st
 import pandas as pd
 import os
@@ -325,24 +325,30 @@ def page_keywordAnaysis(df, filterID):
 def page_TopAssignees(df, filterID):
     fileName = "View Settigngs"
 
-    with st.expander("Patents by Top Assignees", expanded=True):
-        st.write("Display assignees that has more than 1 patent in the current filter")
-        topAssignees = df.groupby(['Assignee']).size()
-        topAssignees = topAssignees.loc[topAssignees.values>1]
-        topAssignees = topAssignees.sort_values(ascending=False)
-        fig, ax = plt.subplots(figsize = (14, 9))
-        sns.barplot(x=topAssignees.index, y=topAssignees.values)
-        plt.grid(alpha=0.3)
-        plt.suptitle("Patents By Assignees (more than 1)", fontsize=24)
-        plt.title("Filter ID: %s" % filterID, fontsize=12)
-        plt.xticks(rotation=60, ha='right')
-        plt.tight_layout()
-        #st.pyplot(fig)
-        
-        # New way
-        img = io.BytesIO()
-        plt.savefig(img, format='png')
-        st.image(img, caption="Plot 1")
+
+    st.image("https://placekitten.com/500/300")
+
+    #with st.beta_expander("Patents by Top Assignees", expanded=True):
+    st.write("Display assignees that has more than 1 patent in the current filter")
+    topAssignees = df.groupby(['Assignee']).size()
+    topAssignees = topAssignees.loc[topAssignees.values>1]
+    topAssignees = topAssignees.sort_values(ascending=False)
+    fig, ax = plt.subplots(figsize = (14, 9))
+    sns.barplot(x=topAssignees.index, y=topAssignees.values)
+    plt.grid(alpha=0.3)
+    plt.suptitle("Patents By Assignees (more than 1)", fontsize=24)
+    plt.title("Filter ID: %s" % filterID, fontsize=12)
+    plt.xticks(rotation=60, ha='right')
+    plt.tight_layout()
+    #st.pyplot(fig)
+    
+    # New way
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    st.image(img, caption="Plot 1")
+
+    st.image("https://placekitten.com/500/300")
+
 
     with st.expander("Patent Timeline"):
         st.write("Display when assignees with more than 1 patent _filed_ (Priority Date) for their patents. Remember that the typical patent time in US/KR/WO is much longer than in China.")
@@ -632,6 +638,20 @@ def page_keywordXRay(df, filterID):
         st.pyplot(fig)
 ###################################################################################################
 def main():
+
+    st.image("https://placekitten.com/500/300")
+
+    st.markdown(
+        """
+    <style>
+    button {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
 
     # Primary Layout 
     st.title("Patent Analysis")

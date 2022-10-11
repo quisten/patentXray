@@ -9,4 +9,7 @@ Tasks befor release:
 - Clicable links in dataframe object (hard!)
 - Downloadble pictures and complete report (csv)
 - Clickable pictures (seems to be an limitation)
+    -> It's a requirement 
+    Fix: Render Images; use st.image() 
+    new problem: cannot do this within an expander which requires some code shuffeling to happen.....will take a day or to fix but worth it
 x Implisit "Higher Than" Preset
