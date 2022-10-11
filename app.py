@@ -4,12 +4,23 @@ import streamlit as st
 import pandas as pd
 import os
 
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 import seaborn as sns 
 import math
+import io
 
+hvar = """  <script>
+                    var elements = window.parent.document.querySelectorAll('.streamlit-expanderHeader');
+                    var arrayLength = elements.length;
+                    for (var i =0 ; i< arrayLength; i++) {
+                        elements[i].style.color = 'rgba(183, 56, 68, 1)';
+                        elements[i].style.fontSize = 'normal';
+                        elements[i].style.fontWeight = 'normal'; 
+                    }
+            </script>"""
 
-dfOptions = ["Higher Than scoreTreshold", "Has Polight Trademarks", "Only PLT Competitors Related Patents", "Only PLT's' Patents"]
+dfOptions = ["Has poLight Trademarks", "Patents by Varioptics/Cornings", "Patents by poLight"]
 
 ###################################################################################################
 # Helper Functions
@@ -96,14 +107,16 @@ def dfQualifyPatents(df, scoreThres, rmPLT, rmCOMP, rmFALSE, rmNGrant, userOptio
 
     # Assemble
     combineDFs = list()
+    combineDFs.append(scoreDF)
+
     for option in userOptions:
+        #if option == dfOptions[0]:
+        #    combineDFs.append(scoreDF)
         if option == dfOptions[0]:
-            combineDFs.append(scoreDF)
-        if option == dfOptions[1]:
             combineDFs.append(trademarkDF)
-        if option == dfOptions[2]:
+        if option == dfOptions[1]:
             combineDFs.append(compDF)
-        if option == dfOptions[3]:
+        if option == dfOptions[2]:
             combineDFs.append(pltDF)
 
     try:
@@ -156,6 +169,7 @@ def patentTimeScatterPlotAnimation(df, filterName):
     cdate = sortedDates[sortedDates.index[-1]]
 
     patentTime2 = patentTime.copy()
+    
     patentTime2 = patentTime2.loc[patentTime2.Publication_Date < cdate]
     
     fig, ax = plt.subplots(figsize = (14, 7))
@@ -183,24 +197,136 @@ def patentTimeScatterPlotAnimation(df, filterName):
     # TODO: COPY PLOT TO Results/Plots/ and build GIF/MP4
     return
 
+def getCumulativeDateTimeLine(subsetDates): 
+    plotSerie = subsetDates.copy()
+    
+    try:
+        plotSerie.index = pd.to_datetime(plotSerie.values, format="%Y-%m-%d")
+    except:
+        plotSerie.index = pd.to_datetime(plotSerie.values, format="%m/%d/%Y")
+    
+    plotSerie = plotSerie.sort_index(ascending=True)
+    
+    #plotSerie.values[:] = str("A")#100#"A"# int(1)
+    plotSerie = pd.Series(data=[1 for x in range(len(plotSerie))], index=plotSerie.index)
+    plotSerie.values[:] = plotSerie.values.cumsum()
+    #print(plotSerie)
+    #st.write(plotSerie)
+    return plotSerie
 
 
 ###################################################################################################
 # Pages
 
-def page_displayDataFrame(df):
+def page_displayDataFrame(df, filterID):
+
+    # Modify URL
+    df_mod = df.copy()
     
-    st.dataframe(df)
+    #df_mod['URL'] = df_mod['URL'].str.split('"')
+    #df_mod['URL'] = df_mod['URL'].str.replace("\"=HYPERLINK\(", "")
+    #df_mod['URL'] = df_mod['URL'].str.replace("\"\)", "")
+
+    # Display 
+    st.dataframe(df_mod)
+
+    @st.cache
+    def convert_df(df): 
+        return df.to_csv().encode('utf-8')
+
+    csv = convert_df(df)
+
+    fileName = filterID.replace('+','_').replace('|', '')+'.csv'
+    st.download_button("Press to Download Dataframe as CSV", csv, fileName, "text/csv", key='download-csv')
 
     return True
 
-def page_keywordAnaysis(df):
-    pass
+def page_keywordAnaysis(df, filterID):
+    
+    with st.expander(label="Most often Used Lense Descriptors"):    
+        
+        relatedKeywords = ['tunable', 'adjustable', 'variable', 'deformable']
+
+        fig, ax = plt.subplots(figsize = (20, 7))
+        for i, kwd in enumerate(relatedKeywords):
+            plotData = df.copy()
+            plotData = plotData.loc[plotData['kw2'].notnull()]
+            plotData = plotData.loc[plotData['kw2'].str.contains(kwd)]
+
+            tunable = getCumulativeDateTimeLine(plotData.Priority_Date)             # Change this! 
+            plt.plot(tunable.index, tunable.values, alpha=.5, label=kwd)
+
+        if all:
+            plotData = df.copy()
+            plotData = plotData.loc[plotData['kw2'].notnull()]
+            plotData = plotData.loc[plotData['kw2'].str.contains('|'.join(relatedKeywords))]
+            tunable = getCumulativeDateTimeLine(plotData.Priority_Date)             # Change this! 
+            plt.plot(tunable.index, tunable.values, label='All keywords', linestyle='dashed', color=sns.color_palette("tab10")[4])
+            #plotData.to_csv(outputFolder+"tunableTrend_published.csv", encoding='utf-8')
+        
+        limits = pd.to_datetime(['2015-01-10 12:00','2022-01-10 12:00'])
+        plt.xlim(limits[0], limits[1])
+        plt.xticks(rotation=90, ha='right')
+        plt.grid(alpha=0.2)
+        plt.legend(loc="upper left")
+        plt.xlabel("Year", fontsize=12)
+        plt.ylabel("Number of Patents", fontsize=12)
+        plt.suptitle("Patents describing new Lens Technology", fontsize=24)
+        plt.title("FilterID: %s" % filterID)
+        st.pyplot(fig)
+        
+    with st.expander(label="Popular Lens Descriptors"):
+
+        showUnique = st.checkbox(label="Count Adjective Once Per Patent (Unique):", value=True)
+
+        uniqueKeywords = {}
+        totalKeywords = {}
+        for index, row in plotData.iterrows():
+            #print(row.kw2)
+            for tech in row.kw2.split(','):
+                inner = tech.split('|')
+                try:
+                    uniqueKeywords[inner[0]] += 1
+                except:
+                    uniqueKeywords[inner[0]] = 1
+
+                try:
+                    totalKeywords[inner[0]] += int(inner[1])
+                except:
+                    totalKeywords[inner[0]] = int(inner[1])
+
+        #print(uniqueKeywords)
+        #print(totalKeywords)
+        #st.write(uniqueKeywords)
+        
+        fig, ax = plt.subplots(figsize = (20, 7))
+
+        #plt.bar(x=[i for i,x in enumerate(uniqueKeywords)], height=uniqueKeywords.values())
+        if showUnique:
+            plt.bar(x=tuple(uniqueKeywords.keys()), height=uniqueKeywords.values())  
+            plt.xticks(rotation=60, ha='right')
+            plt.suptitle("Unique Keywords used Dataset [%d of %d]" % (len(tunable), len(df)))
+            plt.title("FilterID: %s" % filterID)
+            plt.xlabel("", fontsize=12)
+            plt.ylabel("Unique Mentions (More than one kws per patent)", fontsize=12)
+            plt.tight_layout()
+        else:
+            plt.bar(x=totalKeywords.keys(), height=totalKeywords.values())
+            plt.xticks(rotation=60, ha='right')
+            plt.suptitle("Unique Keywords Dataset [%d of %d]" % (len(tunable), len(df)))
+            plt.title("FilterID: %s" % filterID)
+            plt.ylabel("Unique Mentions (More than one kws per patent)", fontsize=12)
+            plt.tight_layout()
+        
+        st.pyplot(fig)
+
+    return True
 
 def page_TopAssignees(df, filterID):
     fileName = "View Settigngs"
 
     with st.expander("Patents by Top Assignees", expanded=True):
+        st.write("Display assignees that has more than 1 patent in the current filter")
         topAssignees = df.groupby(['Assignee']).size()
         topAssignees = topAssignees.loc[topAssignees.values>1]
         topAssignees = topAssignees.sort_values(ascending=False)
@@ -211,10 +337,15 @@ def page_TopAssignees(df, filterID):
         plt.title("Filter ID: %s" % filterID, fontsize=12)
         plt.xticks(rotation=60, ha='right')
         plt.tight_layout()
-        #plt.show()
-        st.pyplot(fig)
- 
+        #st.pyplot(fig)
+        
+        # New way
+        img = io.BytesIO()
+        plt.savefig(img, format='png')
+        st.image(img, caption="Plot 1")
+
     with st.expander("Patent Timeline"):
+        st.write("Display when assignees with more than 1 patent _filed_ (Priority Date) for their patents. Remember that the typical patent time in US/KR/WO is much longer than in China.")
 
         # Build Structure
         companyLabel = list()
@@ -308,11 +439,13 @@ def page_growthAnalysis(df, filterID):
     pubStat["Patent_Age_Month"] = pubStat["Patent_Age_Month"].astype(int)  
 
     with st.expander("Prioirty vs Publication Dates for Dataframe", expanded=True):
+        st.write("By Using Publication Date on the X-axis and days from Filing to Publication (PatentTime = Publication_Date-Priority_Date) we get an insight how the activities in the different regions develop.") 
         patentTimeScatterPlotAnimation(pubStat, filterID)
 
     # Direct Trend Analysis | Score over 200 | Month 
     with st.expander("Patents Per Quarter", expanded=True):
-    
+        st.write("Patents Per Quarter - and drawing a regression line through it.")
+
         # Direct Trend Analysis | Score over 200 | Quarter """
         pubStat["Patent_Age_Quarter"] = pubStat["Patent_Age"]/90.0
         pubStat["Patent_Age_Quarter"] = pubStat["Patent_Age_Quarter"].astype(int)  
@@ -340,6 +473,8 @@ def page_growthAnalysis(df, filterID):
     with st.expander(label="Patent Time (From filed to public) as a Distribution ", expanded=False):
         #Returns an lookuptable where index is month and value is estimated patent saturation"""
         #pubStat = df.copy()
+
+        st.write("Looking at Patent Time Distributions. They can be extraploated to give an non-conservative indication of what migth come.")
 
         try:
             pubStat.Priority_Date = pd.to_datetime(pubStat.Priority_Date, format='%Y-%m-%d')
@@ -384,6 +519,8 @@ def page_growthAnalysis(df, filterID):
         #pltSaveFig(outputFolder+"patentTime_Lookup_Normalized_CumSum.png")
 
     with st.expander(label="Optimistic Upside Prediction", expanded=True):
+        st.write("This is the distributions applied. Highly uncertain - but a fun plots to show! It's a straight up multiplication of 'how many patents today' by 'how many \% of patens have we seen based on todays date'. Super inaccurate and numerically unstable.")
+
         patentProb = cumSum
         #""" Adjusted Regplot | Month """
         #patentProb = patentDistributionCurve(df, outputFolder)
@@ -445,6 +582,54 @@ def page_growthAnalysis(df, filterID):
 
     return True
 
+def page_keywordXRay(df, filterID):
+
+    with st.expander("Keyword XRay", expanded=True):
+        
+        st.write("Show occurences of said keyword group as a function of assignees. Not all patents uses keywords as active, some even tries to fully avoid it.")
+
+        options = ['Kw1: Trademarks', 'Kw2: Lens Adjectives', 'Kw3: Components', 'Kw4: Competitive Solutions', 'Kw5: Use-Cases']
+        option = st.selectbox("Select Keywords", options, index=4)
+        rowToUse = 'kw'+str(options.index(option)+1)
+        #st.write(rowToUse)
+
+        byAssignee = {}
+        plotData = df.copy()
+        plotData = plotData.loc[plotData[rowToUse].notnull()]
+        #print("%s length = %d" % (graphTitle, len(plotData)))
+        for index, row in plotData.iterrows():
+            byAssignee[row.Assignee] = {}
+        for index, row in plotData.iterrows():
+            for app in row[rowToUse].split(','):
+                inner = app.split('|')
+                
+                if inner[0] == 'augmented':
+                    inner[0] = 'AR'
+
+                #try:
+                if inner[0] in byAssignee[row.Assignee].keys():
+                    byAssignee[row.Assignee][inner[0]] += 1
+                else:
+                    byAssignee[row.Assignee][inner[0]] = 1
+            
+            # except:
+            #     byAssignee[row.Assignee] = {} 
+            #     byAssignee[row.Assignee][inner[0]] = 1
+                    
+        #print(byAssignee)        
+        # byAssignee
+        fig, ax = plt.subplots(figsize = (20, 10))
+        fig.subplots_adjust(bottom=0.5)
+        plt.grid(alpha=0.2)
+        plt.suptitle("%s by Assignee" % option, fontsize=18)
+        plt.title("filterID: %s" % filterID, fontsize=18)
+        df2 = pd.DataFrame(data=byAssignee)
+        sns.heatmap(data=df2, annot=True, linecolor="black")
+        plt.xticks(rotation=60, ha='right')
+        #plt.tight_layout()
+        #plt.show()
+        #pltSaveFig(outputFile)
+        st.pyplot(fig)
 ###################################################################################################
 def main():
 
@@ -468,8 +653,8 @@ def main():
         ignoreDate = st.slider("Remove Patents Older Than", min_value=2000, max_value=pd.to_datetime("today").year, value=2015)
         mustContain = st.text_input("'Assignees' Must Contain:")
 
-        dfPreset = st.multiselect("Dataframe Preset", dfOptions, default=dfOptions[0])
-        rmPLT = st.checkbox(label="Remove Polight's Patents", value=True)
+        dfPreset = st.multiselect("Dataframe Preset", dfOptions)#, default=dfOptions[0])
+        rmPLT = st.checkbox(label="Remove poLight's Patents", value=True)
         rmCOMP = st.checkbox(label="Remove Competitor's Patents", value=True)
         rmFALSE = st.checkbox(label="Remove Known False-Positives", value=True)
         rmNGrant = st.checkbox(label="Remove Not Granted", value=False)
@@ -491,27 +676,32 @@ def main():
     
     st.write("DataFrame Size: %s" % len(dfFinal))
 
-    tab1, tab2, tab3, tab4 = st.tabs(["DataFrame", "Top Assignees", "Patent Growth", "Keyword Analysis", ])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["DataFrame", "Top Assignees", "Patent Growth", "Lens Adjective Analysis", "Keyword X-Ray"])
 
     with tab1:
-        page_displayDataFrame(dfFinal)
+        page_displayDataFrame(dfFinal, filterID)
     with tab2:
         page_TopAssignees(dfFinal, filterID)
     with tab3:
         page_growthAnalysis(dfFinal, filterID)
     with tab4:
-        pass
+        page_keywordAnaysis(dfFinal, filterID)
+    with tab5:
+        page_keywordXRay(dfFinal, filterID)
 
+
+    st.write("Disclaimer: This application is purely made for entertainment and educational purposes. Use it identify and scrutinize patents, companies and technology. Errors in underlying data, method and programming is guaranteed, the author has not yet found them yet!")
 
     st.write("Version 1.0 alpha - 10 October 2022")
-    
+    components.html(hvar, height=0, width=0)
+
     return True
 
 ###################################################################################################
 # Init 
 if __name__ == "__main__":
     st.set_page_config(
-        "Patent Analyiser",
+        "Patent Crawler XRay",
         "📊",
         initial_sidebar_state="expanded",
         #layout="wide",
