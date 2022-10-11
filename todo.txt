@@ -1,0 +1,12 @@
+
+
+10/10/2022
+
+Tasks befor release:
+- Fix missing Keyword Plots (fixed!)
+- Document all charts 
+- Fix matplotlib "No Artists with labels found to put in legend..." 
+- Clicable links in dataframe object (hard!)
+- Downloadble pictures and complete report (csv)
+- Clickable pictures (seems to be an limitation)
+x Implisit "Higher Than" Preset
