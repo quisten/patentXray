@@ -678,6 +678,7 @@ def main():
     availableRuns = os.listdir("./Runs")
 
     with st.expander("Usage", expanded=True):
+        st.write("This Application allows analysis on a patent databases. Databases are created by collecting patents shared on various forums, SV/FA/Reddit. These are given a score based on occurrences of keywords, if the score is high enough, citations will also be evaluted. The mention of polymer, membranes and autofocus will usually yield in high values.")
         st.write("Basic Usage: _Select a 'scoreThreshold' in 'Select Data...'_")
         st.write("Advanced Usage: _Select one or more subsets and remove patents by the use of special attributes based on date, assignees and granted status._")
         st.write("_This App renderes best on desktop, especially the DataFrame viewer which is actually kinda great._")
