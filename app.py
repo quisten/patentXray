@@ -672,33 +672,28 @@ def main():
     )
 
     # Primary Layout 
-    st.title("Patent Analysis")
-    st.write("Analysis of Patents related to Tunable Optics Searches")
+    st.title("Patent XRay")
+    st.write("Analysis of Patents related to the future of Tunable Optics.")    
+    st.write("Find the Instuctions and Disclaimer on the bottom.")
    
     availableRuns = os.listdir("./Runs")
 
-    with st.expander("Usage", expanded=True):
-        st.write("This Application allows analysis on a patent databases. Databases are created by collecting patents shared on various forums, SV/FA/Reddit. These are given a score based on occurrences of keywords, if the score is high enough, citations will also be evaluted. The mention of polymer, membranes and autofocus will usually yield in high values.")
-        st.write("Basic Usage: _Select a 'scoreThreshold' in 'Select Data...'_")
-        st.write("Advanced Usage: _Select one or more subsets and remove patents by the use of special attributes based on date, assignees and granted status._")
-        st.write("_This App renderes best on desktop, especially the DataFrame viewer which is actually kinda great._")
-        st.write("_On Mobile you can swipe left to get full-size view option for all plots._")
 
     with st.expander("Select Data To Process", expanded=True):
-        selectedRun = st.selectbox(label="Select Run", options=availableRuns)
+        selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=len(availableRuns)-1)
         #rmPLT = st.checkbox(label="Remove Polight's Patents", value=True)
         
-        scoreTresh = st.slider("Score Treshold", min_value=0, max_value=600, value=100)
+        scoreTresh = st.slider("Score Treshold", min_value=0, max_value=600, step=5, value=200)
   
         ## Create DF 
         df = pd.read_csv('./Runs/%s/' % selectedRun+"crawlerALL_translated.csv", index_col=[0], encoding='utf-8')
 
-    with st.expander("Advanced Settings", expanded=True):
+    with st.expander("Advanced Settings", expanded=False):
         
         ignoreDate = st.slider("Remove Patents Older Than", min_value=2000, max_value=pd.to_datetime("today").year, value=2015)
         mustContain = st.text_input("'Assignees' Must Contain:")
 
-        dfPreset = st.multiselect("Dataframe Subsets (to Combine)", dfOptions, default=dfOptions[0])
+        dfPreset = st.multiselect("Dataframe Subsets (to Combine)", dfOptions, default=dfOptions[0:2])
         rmPLT = st.checkbox(label="Remove poLight's Patents", value=True)
         rmCOMP = st.checkbox(label="Remove Competitor's Patents", value=True)
         rmFALSE = st.checkbox(label="Remove Known False-Positives", value=True)
@@ -719,26 +714,83 @@ def main():
 
         st.write("Filter ID:", filterID)
     
-    st.write("DataFrame Size: %s" % len(dfFinal))
+    st.write("Number of Patents: %s" % len(dfFinal))
+    
+    generateCharts = False
+    if st.button("Generate Charts"):
+        generateCharts = True
+  
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["DataFrame", "Top Assignees", "Patent Growth", "Lens Adjective Analysis", "Keyword X-Ray"])
 
+    
     with tab1:
         page_displayDataFrame(dfFinal, filterID)
+
+        mustContainID = st.text_input("Find PatentCode:")
+        selection = dfAll[dfAll['patentID'].str.contains(mustContainID)]
+        if mustContainID != "":
+            st.dataframe(selection)
+    
     with tab2:
-        page_TopAssignees(dfFinal, filterID)
+        if generateCharts:
+            page_TopAssignees(dfFinal, filterID)
+        else:
+            st.write("You Must Generate Charts")
     with tab3:
-        page_growthAnalysis(dfFinal, filterID)
+        if generateCharts:
+            page_growthAnalysis(dfFinal, filterID)
+        else:
+            st.write("You Must Generate Charts")
     with tab4:
-        page_keywordAnaysis(dfFinal, filterID)
+        if generateCharts:
+            page_keywordAnaysis(dfFinal, filterID)
+        else:
+            st.write("You Must Genearte Charts")
     with tab5:
-        page_keywordXRay(dfFinal, filterID)
+        if generateCharts:
+            page_keywordXRay(dfFinal, filterID)
+        else:
+            st.write("You Must Genearte Charts")
 
     st.markdown("""---""")
-    st.write("Disclaimer: This application is purely made for entertainment and educational purposes. Use it identify and scrutinize patents, companies and technology. Errors in underlying data, method and programming is guaranteed, the author is unable to find them")
+
+    with st.expander("Instructions", expanded=False):
+        st.markdown("**About**")
+        st.markdown("This application is made for analysing collected patent-databased that has been created by scraping the forums on SV/FA/Reddit.")
+        st.markdown("Patents has been subjected to a keyword analysis that includes 1. polight trademarks 2. lense adjectives 3. technical elements/descriptions 4. competitive tunable components, 5. use-cases.")
+        st.markdown("A score is given based on the keyword analysis. The database is built by traversing the citations of intereting/relevant patents.")
+        st.markdown("Patent XRay allows you to select and combine subsets from these seaches known as _'Runs'_ by selecting _'scoreTreshold'_.")
+        st.markdown("More advacend settigns is avaiable which allows you to scrutinize competitive patetns, poLights patents and only the patents that includes trademarks.")
+        
+        st.markdown("**Use-cases**")
+        st.markdown("1. Look-up specific patents: Under the Dataframe tab you can lookup a specific patentCode to see if it exists in the database. If yes, then you get to see the score and all the keywords accociated with said patent.")
+        st.markdown("2. Find most relevant patents: Use default values to find the most interesting patents to read and companies to investigate.")
+        st.markdown("3. Use 'Assignee' under advanced settings to isolate patents from f.ex Sunny and Truly by using 'Sunny Truly' patents. NB: All names are capitalized!")
+        st.markdown("All selection can be downloaded as CSV files")
+
+        st.markdown("**Tips**")
+        st.markdown("Mobile Version - The DataFrame viewer is hard  to use on android but really great on Desktop.")
+        st.markdown("Mobile Version - Swipe left to get Fullscreen-View for graphs")
+
+        st.markdown("**Want to help?**")
+        st.markdown("Information about false-positives and other patents you think have been rated falsely is crucial for the improvement of these tools.")
+        st.markdown("I am especially in the need for some CSS skills to make this look pretty! Hit me up if you're up for the job!")
+
+        st.video(data="Data/overview.mp4", format="video/mp4")
+
+        #st.write("This Application allows analysis on a patent databases. Databases are created by collecting patents shared on various forums, SV/FA/Reddit. These are given a score based on occurrences of keywords, if the score is high enough, citations will also be evaluted. The mention of polymer, membranes and autofocus will usually yield in high values.")
+        #st.write("Basic Usage: _Select a 'scoreThreshold' in 'Select Data...'_")
+        #st.write("Advanced Usage: _Select one or more subsets and remove patents by the use of special attributes based on date, assignees and granted status._")
+        #st.write("_This App renderes best on desktop, especially the DataFrame viewer which is actually kinda great._")
+        #st.write("_On Mobile you can swipe left to get full-size view option for all plots._")
+
+
+    
+    st.write("**Disclaimer**: This application is purely made for entertainment and educational purposes. Use it identify and scrutinize patents, companies and technology. Errors in underlying data, method and programming is guaranteed, the author is unable to find them.")
     st.write("'The world is your oyster but you're allergic to shellfish.'")
     st.markdown("""---""")
-    st.write("Version 1.1 alpha - 12 October 2022")
+    st.write("Version 1.2 alpha - 12 October 2022")
     components.html(hvar, height=0, width=0)
 
     return True
