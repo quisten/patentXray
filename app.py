@@ -677,7 +677,7 @@ def main():
     st.write("Find the Instuctions and Disclaimer on the bottom.")
    
     availableRuns = os.listdir("./Runs")
-
+    availableRuns.sort()
 
     with st.expander("Select Data To Process", expanded=True):
         selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=len(availableRuns)-1)
@@ -728,7 +728,7 @@ def main():
         page_displayDataFrame(dfFinal, filterID)
 
         mustContainID = st.text_input("Find PatentCode:")
-        selection = dfAll[dfAll['patentID'].str.contains(mustContainID)]
+        selection = df[df['patentID'].str.contains(mustContainID)]
         if mustContainID != "":
             st.dataframe(selection)
     
@@ -748,10 +748,10 @@ def main():
         else:
             st.write("You Must Genearte Charts")
     with tab5:
-        if generateCharts:
-            page_keywordXRay(dfFinal, filterID)
-        else:
-            st.write("You Must Genearte Charts")
+        #if generateCharts:
+        page_keywordXRay(dfFinal, filterID)
+        #else:
+        #    st.write("You Must Genearte Charts")
 
     st.markdown("""---""")
 
