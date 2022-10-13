@@ -757,12 +757,23 @@ def main():
 
     with st.expander("Instructions", expanded=False):
         st.markdown("**About**")
-        st.markdown("This application is made for analysing collected patent-databased that has been created by scraping the forums on SV/FA/Reddit.")
-        st.markdown("Patents has been subjected to a keyword analysis that includes 1. polight trademarks 2. lense adjectives 3. technical elements/descriptions 4. competitive tunable components, 5. use-cases.")
-        st.markdown("A score is given based on the keyword analysis. The database is built by traversing the citations of intereting/relevant patents.")
-        st.markdown("Patent XRay allows you to select and combine subsets from these seaches known as _'Runs'_ by selecting _'scoreTreshold'_.")
-        st.markdown("More advacend settigns is avaiable which allows you to scrutinize competitive patetns, poLights patents and only the patents that includes trademarks.")
-        
+        markdown = """This application is made for analysing collected patent-databased that has been created by scraping the forums on SV/FA/Reddit.
+                      Patents has been subjected to a keyword analysis that includes:</p>
+                      - 1. polight trademarks 
+                      - 2. lense adjectives 
+                      - 3. technical elements/descriptions 
+                      - 4. competitive tunable components, 
+                      - 5. use-cases.
+                      A score is given based on the keyword analysis. The database is built by traversing the citations of intereting/relevant patents.
+                      Patent XRay allows you to select and combine subsets from these seaches known as _'Runs'_ by selecting _'scoreTreshold'_.
+                      More advacend settings is avaiable which allows you to scrutinize competitive patetns, poLights patents and only the patents that includes trademarks.
+                      More advacend settings is avaiable which allows you to scrutinize competitive patetns, poLights patents and only the patents that includes trademarks."""
+        st.markdown(markdown)
+
+        st.markdown("**Score**")
+        st.markdown("The score is an arbitarily value that represent the presence of keywords related to Tunable Optics and poLight trademarks. A score of ~100 suggests a high probability that the patent includes a tunable optic solution.")
+        st.markdown("A score of ~200 indicates a very high probability that specifically TLens is described or directly mentioned in the patent.")
+
         st.markdown("**Use-cases**")
         st.markdown("1. Look-up specific patents: Under the Dataframe tab you can lookup a specific patentCode to see if it exists in the database. If yes, then you get to see the score and all the keywords accociated with said patent.")
         st.markdown("2. Find most relevant patents: Use default values to find the most interesting patents to read and companies to investigate.")
@@ -788,7 +799,7 @@ def main():
 
     
     st.write("**Disclaimer**: This application is purely made for entertainment and educational purposes. Use it identify and scrutinize patents, companies and technology. Errors in underlying data, method and programming is guaranteed, the author is unable to find them.")
-    st.write("'The world is your oyster but you're allergic to shellfish.'")
+    st.write("_'The world is your oyster but you're allergic to shellfish.'_")
     st.markdown("""---""")
     st.write("Version 1.2 alpha - 12 October 2022")
     components.html(hvar, height=0, width=0)
