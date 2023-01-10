@@ -679,8 +679,11 @@ def main():
     availableRuns = os.listdir("./Runs")
     availableRuns.sort()
 
+    use_index = availableRuns.index("2023-Januar-10_Threshold_100_Full")
     with st.expander("Select Data To Process", expanded=True):
-        selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=len(availableRuns)-1)
+        #selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=len(availableRuns)-1)
+        selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=availableRuns.index("2023-Januar-10_Threshold_100_Full"))
+    
         #rmPLT = st.checkbox(label="Remove Polight's Patents", value=True)
         
         scoreTresh = st.slider("Score Treshold", min_value=0, max_value=600, step=5, value=200)
