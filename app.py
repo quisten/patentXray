@@ -679,7 +679,7 @@ def main():
     availableRuns = os.listdir("./Runs")
     availableRuns.sort()
 
-    use_index = availableRuns.index("2023-Januar-28_Threshold_100_Full")
+    use_index = availableRuns.index("2023-Januar-28 j_Threshold_100_Full")
     with st.expander("Select Data To Process", expanded=True):
         #selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=len(availableRuns)-1)
         selectedRun = st.selectbox(label="Select Run", options=availableRuns, index=availableRuns.index("2023-Januar-10_Threshold_100_Full"))
