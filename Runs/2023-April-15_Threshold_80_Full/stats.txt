@@ -1,0 +1,12 @@
+crawlerALL_translated : 17280
+crawlerALL_translated_valid : 12197
+crawlerALL_translated_valid_unkind : 10735
+crawlerALL_translated_valid_unkind_unique : 10177
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvuu_G1.csv : 1988
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvu_G1.csv : 2127
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvuu_G2.csv : 203
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvu_G2.csv : 214
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvuu_G3.csv : 75
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvu_G3.csv : 83
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvuu_G4.csv : 63
+C:/cache-plt/Runs/Run-April-15_Threshold_80_Full\tvu_G4.csv : 70
